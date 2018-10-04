@@ -1,3 +1,15 @@
+# ignore the build directory
+build
+
+# and ignore all CMake files
+CMake*
+
+# and all temporaries
+*~
+~*
+#*
+*#
+
 # Prerequisites
 *.d
 

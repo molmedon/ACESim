@@ -1,0 +1,26 @@
+# set beam type
+/gps/pos/type Beam
+
+# set beam to electrons
+/gps/particle e-
+
+# set origin position at edge of world volume
+/gps/position 0 0 50 cm
+
+# set spot size to 1mm
+/gps/pos/sigma_x 0.1 mm
+/gps/pos/sigma_y 0.1 mm
+
+# set angular divergence
+/gps/ang/type beam2d
+/gps/ang/sigma_x 0.1 deg
+/gps/ang/sigma_y 0.1 deg
+
+# set focus point
+/gps/ang/focuspoint 0 0 0 mm
+
+# fire them down the z-axis
+/gps/direction 0 0 -1
+
+# set fixed beam energy
+/gps/energy 12.16 GeV
