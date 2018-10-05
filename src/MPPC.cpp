@@ -18,12 +18,15 @@ auto MPPC::Initialize(G4HCofThisEvent* hitsCollectionOfThisEvent) -> void {
     // add the hit collection to this event
     hitsCollectionOfThisEvent->AddHitsCollection(fHCID, fHitsCollection);
 
+
 }
 
 ///
 /// \brief Process a hit at a given step.
 ///
 auto MPPC::ProcessHits(G4Step* step, G4TouchableHistory* /*history*/) -> G4bool {
+
+    std::cerr << "Hit in MPPC!\n";
 
     // we only want to process opticalphotons
     if (step->GetTrack()->GetDefinition() != G4OpticalPhoton::OpticalPhotonDefinition())
@@ -56,7 +59,7 @@ auto MPPC::ProcessHits(G4Step* step, G4TouchableHistory* /*history*/) -> G4bool 
         hit->fLength = track->GetTrackLength();
 
         // get track information storage
-        const auto *trackInformation{(TrackInformation*)track->GetUserInformation()};
+        const auto trackInformation{(TrackInformation*)track->GetUserInformation()};
 
         // total number of reflections
         hit->fReflections = trackInformation->GetReflectionCount();

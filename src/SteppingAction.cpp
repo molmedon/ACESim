@@ -44,6 +44,8 @@ auto SteppingAction::UserSteppingAction(const G4Step * step) -> void {
             eventInformation->IncAbsorption();
         }
     } else {
+        // we then check whether these are hits in ACE
+        // this->CheckForACEHits(step);
         return;
     }
 

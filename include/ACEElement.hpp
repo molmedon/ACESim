@@ -2,33 +2,30 @@
 
 #include <G4VSensitiveDetector.hh>
 
-#include "MPPCHit.hpp"
-
+#include "ACEHit.hpp"
 
 ///
-/// \brief This class represent a MPPC SensitiveDetector object.
+/// \brief A class representing the sensitive parts of a single ACE element.
 ///
-class MPPC final : public G4VSensitiveDetector {
+class ACEElement final : public G4VSensitiveDetector {
 
 public:
 
     ///
-    /// \brief Create a new MPPC with a given identifier.
+    /// \brief Create a new ACE element.
     ///
-    MPPC(const G4String& name) : G4VSensitiveDetector(name),
-                                 fHCID(-1), fHitsCollection(nullptr) {
-
-        // register the name of HC's of this MPPC
-        collectionName.insert("photonsDetected");
+    ACEElement(const G4String& name) : G4VSensitiveDetector(name),
+                                       fHCID(-1), fHitsCollection(nullptr) {
+        collectionName.insert("hits");
     };
 
     ///
-    /// \brief Initialize a new MPPC at the start of an event.
+    /// \brief Initialize the ACE element at the start of an event.
     ///
     auto Initialize(G4HCofThisEvent* hitsCollectionOfThisEvent) -> void override;
 
     ///
-    /// \brief Process a hit at a given step.
+    /// \brief Process a hit in the detector at a given step.
     ///
     auto ProcessHits(G4Step* step, G4TouchableHistory* history) -> G4bool override;
 
@@ -47,6 +44,6 @@ private:
     ///
     /// \brief The collection of hits into this MPPC for an event.
     ///
-    MPPCHitsCollection* fHitsCollection;
+    ACEHitsCollection* fHitsCollection;
 
 };

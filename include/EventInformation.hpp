@@ -27,7 +27,7 @@ class EventInformation final : public G4VUserEventInformation
     ///
     /// \brief Get the number of non-boundary absorbed photons.
     ///
-    auto GetAbsorptionCount() -> const G4int {return fAbsorptionCount;}
+    auto GetAbsorptionCount() const -> G4int {return fAbsorptionCount;}
 
     ///
     /// \brief Increment the number of boundary absorbed photons.

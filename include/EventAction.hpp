@@ -54,9 +54,28 @@ public:
 private:
 
     ///
+    /// \brief Process and save data from the trigger system.
+    ///
+    /// This must only be called from EndOfEventAction().
+    ///
+    auto ProcessTriggerHits(const G4Event* event) -> void;
+
+    ///
+    /// \brief Process and save data from the ACE elements.
+    ///
+    /// This must only be called from EndOfEventAction().
+    ///
+    auto ProcessACEHits(const G4Event* event) -> void;
+
+    ///
     /// \brief Zero-out all member variables.
     ///
     auto Reset() -> void;
+
+
+    /// \brief Count the number of
+    ///
+    auto GetPhotonsProduced(const G4Event* event) const -> G4int;
 
 // private:
 //     // methods
@@ -65,4 +84,3 @@ private:
 
 
 };
-

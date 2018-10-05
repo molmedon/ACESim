@@ -6,7 +6,8 @@
 #include <G4OpticalPhysics.hh>
 #include <G4StoppingPhysics.hh>
 #include <G4EmStandardPhysics.hh>
-#include <G4NeutronTrackingCut.hh>
+#include <G4HadronElasticPhysics.hh>
+#include <G4HadronPhysicsFTFP_BERT.hh>
 #include <G4HadronElasticPhysicsHP.hh>
 #include <G4HadronPhysicsFTFP_BERT_HP.hh>
 
@@ -28,13 +29,15 @@ PhysicsList::PhysicsList() {
     // Hadron Physics
     RegisterPhysics( new G4StoppingPhysics(verbose) );
     RegisterPhysics( new G4IonPhysics(verbose) );
-    RegisterPhysics( new G4HadronElasticPhysicsHP(verbose));
-    RegisterPhysics( new G4HadronPhysicsFTFP_BERT_HP(verbose));
+    RegisterPhysics( new G4HadronElasticPhysics(verbose));
+    RegisterPhysics( new G4HadronPhysicsFTFP_BERT(verbose));
 
-    // Neutron tracking cut
-    RegisterPhysics( new G4NeutronTrackingCut(verbose) );
+    // these two are high precision hadron physics - use these for production runs.
+    // RegisterPhysics( new G4HadronElasticPhysicsHP(verbose));
+    // RegisterPhysics( new G4HadronPhysicsFTFP_BERT_HP(verbose));
 
-    // optical
+
+    // and register our optical physics
     RegisterPhysics( new G4OpticalPhysics(verbose) );
 
 }
