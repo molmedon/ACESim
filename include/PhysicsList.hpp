@@ -1,5 +1,6 @@
 #pragma once
 
+#include <FTFP_BERT.hh>
 #include <G4VModularPhysicsList.hh>
 
 
@@ -18,7 +19,7 @@
 ///   6) Neutrino Tracking
 ///   7) Optical Physics
 ///
-class PhysicsList : public G4VModularPhysicsList {
+class PhysicsList final : public FTFP_BERT {
 
 public:
 

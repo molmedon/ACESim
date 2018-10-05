@@ -48,12 +48,12 @@ private:
     ///
     /// \brief Create an assembled waveguide.
     ///
-    auto ConstructWaveguides() -> G4AssemblyVolume*;
+    auto ConstructWaveguides(G4LogicalVolume* dewarChamber) -> void;
 
     ///
-    /// \brief Construct the dewer assembly.
+    /// \brief Construct the dewar assembly.
     ///
-    auto ConstructDewer() -> G4AssemblyVolume*;
+    auto ConstructDewar(G4LogicalVolume* logicWorld) -> G4LogicalVolume*;
 
     ///
     /// \brief Construct the trigger system

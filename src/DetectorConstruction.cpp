@@ -8,17 +8,23 @@
 #include <G4UnitsTable.hh>
 #include <G4PVPlacement.hh>
 #include <G4NistManager.hh>
+#include <G4PSCellCharge.hh>
+#include <G4PSTrackLength.hh>
 #include <G4LogicalVolume.hh>
+#include <G4PSNofSecondary.hh>
 #include <G4OpticalSurface.hh>
 #include <G4PSNofSecondary.hh>
+#include <G4PSEnergyDeposit.hh>
 #include <G4VPhysicalVolume.hh>
 #include <G4VPrimitiveScorer.hh>
 #include <G4SDParticleFilter.hh>
+#include <boost/lexical_cast.hpp>
 #include <G4LogicalSkinSurface.hh>
 #include <G4LogicalBorderSurface.hh>
 #include <G4MultiFunctionalDetector.hh>
 
 #include "MPPC.hpp"
+#include "ACEElement.hpp"
 #include "DetectorConstruction.hpp"
 
 using namespace CLHEP;
@@ -57,32 +63,46 @@ auto DetectorConstruction::Construct() -> G4VPhysicalVolume* {
                                      0, // no mother volume
                                      false, 0, true)};
 
-    // we want to move the elements and the dewer 1/4 of the way
+    // we want to move the elements and the dewar 1/4 of the way
     // to the edge of the world volume, so we need the dimensions
     // of the worldvolume
     auto worldZ{logicWorld->GetSolid()->GetExtent().GetZmax()};
 
-    // construct the ACE assembly
-    auto elements{this->ConstructWaveguides()};
+    // the location that we are going to place elements
+    G4ThreeVector location(0, 0, -worldZ/2);
 
-    // // and place it at the origin
-    G4ThreeVector origin(0, 0, -worldZ/2.);
+    // construct and place the dewar assembly - return the dewar cavity
+    auto dewarChamber{this->ConstructDewar(logicWorld)};
 
-    // and place it!
-    elements->MakeImprint(logicWorld, origin, new G4RotationMatrix(0, 0, 0));
+    // construct the ACE assembly inside the cavity
+    this->ConstructWaveguides(dewarChamber);
 
-    // construct the ACE assembly
-    auto dewer{this->ConstructDewer()};
-
-    // and place it!
-    dewer->MakeImprint(logicWorld, origin, new G4RotationMatrix(0, 0, 0));
+    // we place the waveguides into the dewar chamber
+    // location.setZ(0);
+    // waveguides->MakeImprint(dewarChamber, location, new G4RotationMatrix(0, pi/2., 0));
 
     // we construct the trigger system
     auto trigger{this->ConstructTriggerSystem()};
 
-    // and place it
-    origin.setZ(worldZ/2);
-    trigger->MakeImprint(logicWorld, origin, new G4RotationMatrix(0, 0, 0));
+    // and place the trigger system in the world
+    location.setZ(worldZ/2);
+    trigger->MakeImprint(logicWorld, location, new G4RotationMatrix(0, 0, 0));
+
+    // // create a box
+    // auto solidBox{new G4Box("Box", 5*cm, 5*cm, 5*cm)};
+
+    // // get NIST manager
+    // auto manager{G4NistManager::Instance()};
+
+    // // get air - defined already
+    // auto air{manager->FindOrBuildMaterial("G4_AIR")};
+
+    // // create logical world volume
+    // auto logicBox(new G4LogicalVolume(solidBox, air, "logicBox"));
+
+    // place the aluminum border box
+    // new G4PVPlacement(0, G4ThreeVector(0, 0, 0),
+    //                   logicBox, "physBox", logicWorld, false, 0, true);
 
     // return the physical world
     return physWorld;
@@ -91,6 +111,69 @@ auto DetectorConstruction::Construct() -> G4VPhysicalVolume* {
 
 // construct all sensitive detectors and fields
 auto DetectorConstruction::ConstructSDandField() -> void {
+
+    /////////////////////////////////////////////////
+    // MPPC
+    // construct a sensitive detector for the MPPC's
+    // auto MPPC_SD{new MPPC("MPPC")};
+
+      // set the SiPM to be a SensitiveDetector
+    // G4SDManager::GetSDMpointer()->AddNewDetector(MPPC_SD);
+    // SetSensitiveDetector("logicMPPC", MPPC_SD);
+
+    /////////////////////////////////////////////////
+    // ACE{1,2,3} PRIMITIVE SCORERS
+    // make the corresponding detector
+    // auto ACE{new G4MultiFunctionalDetector("ACEPS")};
+
+    // // we want to count the total amount of energy deposited
+    // auto energyDep{new G4PSEnergyDeposit("energyDep")};
+
+    // // and the track length
+    // auto trackLength{new G4PSTrackLength("trackLength")};
+
+    // // and the charge deposited
+    // auto cellCharge{new G4PSCellCharge("totalCharge")};
+
+    // // and the number of secondaries created
+    // auto noSecondaries{new G4PSNofSecondary("nofSecondary")};
+
+    // // and register all the scorers
+    // ACE->RegisterPrimitive(energyDep);
+    // ACE->RegisterPrimitive(trackLength);
+    // ACE->RegisterPrimitive(cellCharge);
+    // ACE->RegisterPrimitive(noSecondaries);
+
+    // // add the detector to the SDManager and assign it to ACE1x
+    // G4SDManager::GetSDMpointer()->AddNewDetector(ACE);
+    // SetSensitiveDetector("AluminaBar", ACE);
+
+    /////////////////////////////////////////////////
+    // ACE{1,2,3} SENSITIVE DETECTOR
+    // make the corresponding detector
+    auto ACE_SD{new ACEElement("ACE")};
+
+    G4SDManager::GetSDMpointer()->AddNewDetector(ACE_SD);
+    SetSensitiveDetector("AluminaBar", ACE_SD);
+
+    /////////////////////////////////////////////////
+    // COUNT PHOTONS PRODUCED IN DISK
+    auto diskDetector{new G4MultiFunctionalDetector("glassDisk")};
+
+    // create a scorer to count number of photons produced in disk
+    auto photonsProduced{new G4PSNofSecondary("photonsProduced")};
+
+    // filter on opticalphotons
+    auto photonFilter{new G4SDParticleFilter("photonFilter")};
+    photonFilter->add("opticalphoton");
+    photonsProduced->SetFilter(photonFilter);
+
+    // register with the scorer
+    diskDetector->RegisterPrimitive(photonsProduced);
+
+    // set the disk to be a SensitiveDetector
+    G4SDManager::GetSDMpointer()->AddNewDetector(diskDetector);
+    SetSensitiveDetector("GlassDisk", diskDetector);
 
 
 }
@@ -120,50 +203,51 @@ auto DetectorConstruction::CreateWorld() -> G4LogicalVolume* {
 
 }
 
-// construct the dewer
-auto DetectorConstruction::ConstructDewer() -> G4AssemblyVolume* {
+// construct the dewar
+auto DetectorConstruction::ConstructDewar(G4LogicalVolume* logicWorld) -> G4LogicalVolume* {
 
-    // set these properties to adjust dewer dimensions
-    auto outer_radius{200*mm}; // outer radius of dewer
-    auto wall_thickness{3*mm}; // wall thickness
-    auto inner_radius{150*mm}; // radius of dewer's inner compartment
-    auto height{40*cm}; // half heigh of the dewer
+    // set these properties to adjust dewar dimensions
+    auto outer_radius{187.58*mm}; // outer radius of dewar
+    auto outer_thickness{3.175*mm}; // outer wall thickness
+    auto inner_radius{142*mm}; // radius of dewar's inner compartment
+    auto inner_thickness{2.29*mm}; // radius of wall of dewar's inner compartment
+    auto height{40*cm}; // half heigh of the dewar
 
     // we get the materials we neeed
-    auto lHe2{G4Material::GetMaterial("liquidHelium")};
+    auto lHe2{G4Material::GetMaterial("G4_lN2")};
     auto vacuum{G4Material::GetMaterial("Galactic")};
     auto steel{G4Material::GetMaterial("G4_STAINLESS-STEEL")};
 
-    // construct the main dewer cylinder
-    auto dewerSolid{new G4Tubs("Dewer", outer_radius - wall_thickness, outer_radius,
+    // construct the main dewar cylinder
+    auto dewarSolid{new G4Tubs("Dewar", outer_radius, outer_radius + outer_thickness,
                                height, 0, 360*degree)};
 
     // and its logical volume
-    auto dewerLV{new G4LogicalVolume(dewerSolid, steel, "Dewer")};
+    auto dewarLV{new G4LogicalVolume(dewarSolid, steel, "Dewar")};
 
     // construct the inner cylinder of vacuum
-    auto vacuumSolid{new G4Tubs("DewerVacuum", inner_radius, outer_radius - wall_thickness,
+    auto vacuumSolid{new G4Tubs("DewarVacuum", inner_radius + inner_thickness, outer_radius,
                                 height, 0, 360*degree)};
 
     // and the logical volume
-    auto vacuumLV{new G4LogicalVolume(vacuumSolid, vacuum, "DewerVacuum")};
+    auto vacuumLV{new G4LogicalVolume(vacuumSolid, vacuum, "DewarVacuum")};
 
-    // and construct the inner dewer cylinder
-    auto innerSolid{new G4Tubs("DewerInnerCyl", inner_radius - wall_thickness, inner_radius,
+    // and construct the inner dewar cylinder
+    auto innerSolid{new G4Tubs("DewarInnerCyl", inner_radius, inner_radius + inner_thickness,
                                height, 0, 360*degree)};
 
     // and the logical volume
-    auto innerLV{new G4LogicalVolume(innerSolid, steel, "DewerInnerCylinder")};
+    auto innerLV{new G4LogicalVolume(innerSolid, steel, "DewarInnerCylinder")};
 
     // and the inner LHe2 chamber
-    auto cavitySolid{new G4Tubs("DewerCavity", 0, inner_radius - wall_thickness,
+    auto cavitySolid{new G4Tubs("DewarCavity", 0, inner_radius,
                                 height, 0, 360*degree)};
 
     // and the logical volume
-    auto cavityLV{new G4LogicalVolume(cavitySolid, lHe2, "DewerCavity")};
+    auto cavityLV{new G4LogicalVolume(cavitySolid, lHe2, "DewarCavity")};
 
     // create an assembly of them all
-    auto dewer{new G4AssemblyVolume};
+    auto dewar{new G4AssemblyVolume};
 
     // we have to specify placement and rotation matrices for assembling the waveguide
     G4ThreeVector location(0, 0, 0);
@@ -171,19 +255,28 @@ auto DetectorConstruction::ConstructDewer() -> G4AssemblyVolume* {
     G4RotationMatrix* rotation{new G4RotationMatrix(0, pi/2., 0)};
 
     // and construct all the elements
-    dewer->AddPlacedVolume(dewerLV, location, rotation);;
-    dewer->AddPlacedVolume(vacuumLV, location, rotation);;
-    dewer->AddPlacedVolume(innerLV, location, rotation);;
-    dewer->AddPlacedVolume(cavityLV, location, rotation);;
+    dewar->AddPlacedVolume(dewarLV, location, rotation);;
+    dewar->AddPlacedVolume(vacuumLV, location, rotation);;
+    dewar->AddPlacedVolume(innerLV, location, rotation);;
+    dewar->AddPlacedVolume(cavityLV, location, rotation);;
 
-    // and we are done
-    return dewer;
+    // // and place it
+    auto worldZ{logicWorld->GetSolid()->GetExtent().GetZmax()};
+    G4ThreeVector origin(0, 0, -worldZ/2.);
 
+    // and place it!
+    dewar->MakeImprint(logicWorld, origin, new G4RotationMatrix(0, 0, 0));
+
+    // and return the logical chamber so we can insert the ace elements
+    return cavityLV;
 
 }
 
 // define all the materials we will use in building the world
 auto DetectorConstruction::DefineMaterials() const -> void {
+
+    // this is used to make objects opague to opticalphotons
+    G4double OPAQUE[] = {0*nm, 0*nm};
 
     // get the NIST manager
     auto nistManager{G4NistManager::Instance()};
@@ -200,14 +293,26 @@ auto DetectorConstruction::DefineMaterials() const -> void {
     // Aluminum Oxide material defined using NIST Manager
     nistManager->FindOrBuildMaterial("G4_ALUMINUM_OXIDE");
 
-    // Copper material defined using NIST Manager
-    nistManager->FindOrBuildMaterial("G4_Cu");
+    //////////////////////
+    // NYLON - USED FOR TRIGGER SYSTEM HOUSING
+    auto nylon{nistManager->FindOrBuildMaterial("G4_NYLON-8062")};
+    auto NyMPT{new G4MaterialPropertiesTable()};
+    NyMPT->AddProperty("ABSLENGTH", energyRange, OPAQUE, 2)->SetSpline(true);
+    nylon->SetMaterialPropertiesTable(NyMPT);
 
-    // liquid N2 material defined using NIST Manager
-    nistManager->FindOrBuildMaterial("G4_lN2");
+    //////////////////////
+    // STAINLESS STEEL - USED FOR DEWAR WALL
+    auto Cu{nistManager->FindOrBuildMaterial("G4_Cu")};
+    auto CuMPT{new G4MaterialPropertiesTable()};
+    CuMPT->AddProperty("ABSLENGTH", energyRange, OPAQUE, 2)->SetSpline(true);
+    Cu->SetMaterialPropertiesTable(CuMPT);
 
-    // liquid N2 material defined using NIST Manager
-    nistManager->FindOrBuildMaterial("G4_STAINLESS-STEEL");
+    //////////////////////
+    // STAINLESS STEEL - USED FOR DEWAR WALL
+    auto stainless{nistManager->FindOrBuildMaterial("G4_STAINLESS-STEEL")};
+    auto sMPT{new G4MaterialPropertiesTable()};
+    sMPT->AddProperty("ABSLENGTH", energyRange, OPAQUE, 2)->SetSpline(true);
+    stainless->SetMaterialPropertiesTable(sMPT);
 
     //////////////////////
     // AIR
@@ -247,8 +352,11 @@ auto DetectorConstruction::DefineMaterials() const -> void {
                    kStateLiquid, 87.3*kelvin);
 
     // liquid helium
-    new G4Material("liquidHelium", 2, 4.00260*g/mole, 1.390*g/cm3,
+    new G4Material("liquidHelium", 2, 4.00260*g/mole, 0.125*g/cm3,
                    kStateLiquid, 3.2*kelvin);
+
+    // liquid N2 material defined using NIST Manager
+    nistManager->FindOrBuildMaterial("G4_lN2");
 
     // Vacuum
     new G4Material("Galactic", 1., 1.01*g/mole, universe_mean_density,
@@ -259,6 +367,9 @@ auto DetectorConstruction::DefineMaterials() const -> void {
     Walloy->AddElement(elW, 90*perCent);
     Walloy->AddElement(elFe, 3*perCent);
     Walloy->AddElement(elNi, 7*perCent);
+    auto WalloyMPT{new G4MaterialPropertiesTable()};
+    WalloyMPT->AddProperty("ABSLENGTH", energyRange, OPAQUE, 2)->SetSpline(true);
+    Walloy->SetMaterialPropertiesTable(WalloyMPT);
 
     //////////////////////
     // BOROSILICATE GLASS
@@ -275,9 +386,9 @@ auto DetectorConstruction::DefineMaterials() const -> void {
     auto gMPT{new G4MaterialPropertiesTable()};
 
     // constant refractive index across the spectrum
-    G4double gRINDEX[] = {1.51, 1.51};
+    G4double gRINDEX[] = {1.53, 1.53};
 
-    // absorption length att all frequencies
+    // absorption length at all frequencies
     G4double gABSLENGTH[] = {5.081*mm, 19.574*mm, 43.806*mm, 50.513*mm, 60.779*mm,
                             66.472*mm, 64.247*mm, 62.500*mm, 64.016*mm, 66.725*mm,
                             68.512*mm, 69.094*mm, 68.833*mm, 68.171*mm, 67.544*mm,
@@ -290,7 +401,8 @@ auto DetectorConstruction::DefineMaterials() const -> void {
     gMPT->AddProperty("RINDEX", energyRange, gRINDEX, 2)->SetSpline(true);
     gMPT->AddProperty("ABSLENGTH", energySpan, gABSLENGTH, 35)->SetSpline(true);
 
-    borosilicateGlass->SetMaterialPropertiesTable(MPT);;
+    // and assign the materials properties table
+    borosilicateGlass->SetMaterialPropertiesTable(gMPT);
 
     // Print materials
     G4cout << *(G4Material::GetMaterialTable()) << G4endl;

@@ -8,7 +8,7 @@
 
 // initialization for master threads
 auto ActionInitialization::BuildForMaster() const -> void {
-    SetUserAction(new RunAction);
+    // SetUserAction(new RunAction);
 }
 
 // initialization for worker threads

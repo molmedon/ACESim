@@ -12,28 +12,21 @@ public:
     ///
     /// \brief Construct a new MPPCHit
     ///
-    MPPCHit();
+    MPPCHit() : G4VHit(), fMPPCID(-1), fEnergy(0.), fPos(0.), fTime(0.),
+                fLength(0.), fReflections(0), fTotalInternalReflections(0) {}
 
     ///
     /// \brief Initialize a MPPCHit in a given MPPC
     ///
-    MPPCHit(const G4int MPPCID);
-
-    // MPPCHit(const MPPCHit& right);
-    // virtual ~MPPCHit();
-
-    // operators for assignment and equality
-    // const MPPCHit& operator=(const MPPCHit &right);
-    // int operator==(const MPPCHit &right) const;
-
-    // allocate/deallocate using G4Allocator
-    inline void *operator new(size_t);
-    inline void operator delete(void *aHit);
+    MPPCHit(const G4int ID) : G4VHit(), fMPPCID(ID), fEnergy(0.), fPos(0.), fTime(0.),
+                              fLength(0.), fReflections(0), fTotalInternalReflections(0) {}
 
     ///
     /// \brief Print a basic description of this hit.
     ///
-    auto Print() -> void override;
+    auto Print() -> void {
+        G4cout << "  MPPC[" << fMPPCID << "] " << fEnergy << " (eV) at time " << fTime << G4endl;
+    };
 
     // member variables for this MPPC hit
     G4int fMPPCID;       ///< The ID of the MPPC that was hit.
@@ -46,30 +39,7 @@ public:
 
 };
 
-
 ///
 /// \brief A Hit collection of MPPCHits
 ///
 using MPPCHitsCollection = G4THitsCollection<MPPCHit>;
-
-///
-/// \brief A custom thread-safe allocate for MPPCHits
-///
-extern G4ThreadLocal G4Allocator<MPPCHit>* MPPCHitAllocator;
-
-///
-/// \brief A thread-safe allocater for MPPC hits
-///
-inline void* MPPCHit::operator new(size_t) {
-    if (!MPPCHitAllocator) {
-        MPPCHitAllocator = new G4Allocator<MPPCHit>;
-    }
-    return (void*)MPPCHitAllocator->MallocSingle();
-}
-
-///
-/// \brief A thread-safe deallocator for MPPCHits
-///
-inline void MPPCHit::operator delete(void* aHit) {
-    MPPCHitAllocator->FreeSingle((MPPCHit*) aHit);
-}

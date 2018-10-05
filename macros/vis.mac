@@ -29,10 +29,13 @@
 # we want to draw by particle ID
 /vis/modeling/trajectories/create/drawByParticleID
 
-# we don't draw photons unless asked - they tend to crowd the vis
+# we don't draw gammas unless asked - they tend to crowd the vis
 /vis/filtering/trajectories/create/particleFilter
-/vis/filtering/trajectories/particleFilter-0/add opticalphoton
+/vis/filtering/trajectories/particleFilter-0/add gamma
 /vis/filtering/trajectories/particleFilter-0/invert true
+
+# label all step (interaction points) with yellow markers
+#/vis/modeling/trajectories/drawByParticleID-0/default/setDrawStepPts true
 
 # To superimpose all of the events from a given run:
 #/vis/scene/endOfEventAction accumulate

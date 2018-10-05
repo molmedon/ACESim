@@ -44,16 +44,6 @@ RunAction::RunAction() : G4UserRunAction() {
     analysisManager->CreateNtupleDColumn("photonsProduced");
     analysisManager->FinishNtuple();
 
-    // a histogram of photon detection efficiency in the MPPC's
-    // analysisManager->CreateH1("PhotonDetectionEfficiency",
-    //                           "Photon Detection Efficiency (detected/produced)", 100, 0.0, 0.05);
-    // analysisManager->SetH1XAxisTitle(0, "Photon Detection Efficiency (detected/produced)");
-
-    // create a histogram of the time of arrival of photons from the hit time
-    // analysisManager->CreateH1("PhotonArrivalTime",
-    //                           "Arrival Times for Combined MPPC Outputs", 100, 0.0, 1.0, "ns");
-    // analysisManager->SetH1XAxisTitle(1, "Photon Arrival Time");
-
     ////////////////////////////////////////////////////////////////////////////
     /// ACE HIT INFORMATION
 
@@ -77,7 +67,19 @@ RunAction::RunAction() : G4UserRunAction() {
     analysisManager->CreateH2("s5","total charge in ACE1", 60, -6.0, 6.0,60, -6.0, 6.0 );
     analysisManager->CreateH2("s6","total charge in ACE2", 60, -6.0, 6.0,60, -6.0, 6.0 );
     analysisManager->CreateH2("s7","total charge in ACE3", 60, -6.0, 6.0,60, -6.0, 6.0 );
+
     ////////////////////////////////////////////////////////////////////////////
+    /// PHOTON HIT HISTOGRAMS
+
+    // a histogram of photon detection efficiency in the MPPC's
+    analysisManager->CreateH1("PhotonDetectionEfficiency",
+                              "Photon Detection Efficiency (detected/produced)", 100, 0.0, 0.05);
+    analysisManager->SetH1XAxisTitle(13, "Photon Detection Efficiency (detected/produced)");
+
+    // create a histogram of the time of arrival of photons from the hit time
+    analysisManager->CreateH1("PhotonArrivalTime",
+                              "Arrival Times for Combined MPPC Outputs", 100, 0.0, 1.0, "ns");
+    analysisManager->SetH1XAxisTitle(14, "Photon Arrival Time");
 
 }
 
@@ -95,8 +97,9 @@ auto RunAction::BeginOfRunAction(const G4Run* /*run*/) -> void {
     auto analysisManager = G4AnalysisManager::Instance();
 
     // Open an output file
-    // G4String fileName = "ACESim";
-    // analysisManager->OpenFile(fileName);
+    G4String fileName = "ACESim";
+    G4cout << "Saving data to " << fileName << G4endl;
+    analysisManager->OpenFile(fileName);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -104,58 +107,64 @@ auto RunAction::BeginOfRunAction(const G4Run* /*run*/) -> void {
 auto RunAction::EndOfRunAction(const G4Run* /*run*/) -> void {
 
 
-    // // get the analysis manager
-    // auto analysisManager = G4AnalysisManager::Instance();
+    // get the analysis manager
+    auto analysisManager = G4AnalysisManager::Instance();
 
-    // // print histogram statistics
-    // if ( analysisManager->GetH1(1) ) {
-    //     G4cout << G4endl << " ----> print histograms statistic ";
-    //     if(isMaster) {
-    //         G4cout << "for the entire run " << G4endl << G4endl;
-    //     }
-    //     else {
-    //         G4cout << "for the local thread " << G4endl << G4endl;
-    //     }
+    std::cerr << "Entering end of run action!";
 
-    //     G4cout << " Photon Detection Efficiency : mean = "
-    //            << 100*analysisManager->GetH1(0)->mean()
-    //            << "% rms = "
-    //            << 100*analysisManager->GetH1(0)->rms() << "%" << G4endl;
+    // print histogram statistics
+    if ( analysisManager->GetH1(1) ) {
+        G4cout << G4endl << " ----> print histograms statistic ";
+        if(isMaster) {
+            G4cout << "for the entire run " << G4endl << G4endl;
+        }
+        else {
+            G4cout << "for the local thread " << G4endl << G4endl;
+        }
 
-    //     G4cout << " Etungsten : mean = "
-    //            << G4BestUnit(analysisManager->GetH1(1)->mean(), "Energy")
-    //            << " rms = "
-    //            << G4BestUnit(analysisManager->GetH1(1)->rms(),  "Energy") << G4endl;
+        G4cout << " Etungsten : mean = "
+               << G4BestUnit(analysisManager->GetH1(1)->mean(), "Energy")
+               << " rms = "
+               << G4BestUnit(analysisManager->GetH1(1)->rms(),  "Energy") << G4endl;
 
-    //     G4cout << " EAlumina1 : mean = "
-    //            << G4BestUnit(analysisManager->GetH1(2)->mean(), "Energy")
-    //            << " rms = "
-    //            << G4BestUnit(analysisManager->GetH1(2)->rms(),  "Energy") << G4endl;
+        G4cout << " EAlumina1 : mean = "
+               << G4BestUnit(analysisManager->GetH1(2)->mean(), "Energy")
+               << " rms = "
+               << G4BestUnit(analysisManager->GetH1(2)->rms(),  "Energy") << G4endl;
 
-    //     G4cout << " LTungsten : mean = "
-    //            << G4BestUnit(analysisManager->GetH1(3)->mean(), "Length")
-    //            << " rms = "
-    //            << G4BestUnit(analysisManager->GetH1(3)->rms(),  "Length") << G4endl;
+        G4cout << " LTungsten : mean = "
+               << G4BestUnit(analysisManager->GetH1(3)->mean(), "Length")
+               << " rms = "
+               << G4BestUnit(analysisManager->GetH1(3)->rms(),  "Length") << G4endl;
 
-    //     G4cout << " LAlumina1 : mean = "
-    //            << G4BestUnit(analysisManager->GetH1(4)->mean(), "Length")
-    //            << " rms = "
-    //            << G4BestUnit(analysisManager->GetH1(4)->rms(),  "Length") << G4endl;
+        G4cout << " LAlumina1 : mean = "
+               << G4BestUnit(analysisManager->GetH1(4)->mean(), "Length")
+               << " rms = "
+               << G4BestUnit(analysisManager->GetH1(4)->rms(),  "Length") << G4endl;
 
-    //     G4cout << " tungsten output hits : mean = "
-    //            << analysisManager->GetH1(5)->mean()
-    //            << " rms = "
-    //            << analysisManager->GetH1(5)->rms() << G4endl;
-    //     G4cout << " Alumina1 output hits : mean = "
-    //            << analysisManager->GetH1(6)->mean()
-    //            << " rms = "
-    //            << analysisManager->GetH1(6)->rms() << G4endl;
-    // }
+        G4cout << " tungsten output hits : mean = "
+               << analysisManager->GetH1(5)->mean()
+               << " rms = "
+               << analysisManager->GetH1(5)->rms() << G4endl;
+        G4cout << " Alumina1 output hits : mean = "
+               << analysisManager->GetH1(6)->mean()
+               << " rms = "
+               << analysisManager->GetH1(6)->rms() << G4endl;
 
-    // // save histograms & ntuple
-    // //
-    // analysisManager->Write();
-    // analysisManager->CloseFile();
+        G4cout << " Photon Detection Efficiency : mean = "
+               << 100*analysisManager->GetH1(13)->mean()
+               << "% rms = "
+               << 100*analysisManager->GetH1(13)->rms() << "%" << G4endl << G4endl;
+    }
+
+    std::cerr << "Writing files!";
+
+    // save histograms & ntuple
+    //
+    analysisManager->Write();
+    analysisManager->CloseFile();
+
+    std::cerr << "Leaving end of run action\n";
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

@@ -1,5 +1,6 @@
 #include <string>
 
+#include <FTFP_BERT.hh>
 #include <G4UImanager.hh>
 #include <G4RunManager.hh>
 #include <G4UIExecutive.hh>
@@ -51,29 +52,35 @@ auto main(int argc, char** const argv) -> int {
     // initialize the Geant4 kernel
     runManager->Initialize();
 
+    // create vis manager
+    G4VisManager* visManager{new G4VisExecutive};
+    visManager->Initialize();
+
     // get pointer to UI manager
     G4UImanager* UIManager{G4UImanager::GetUIpointer()};
 
     // allow macros to be run from the macros directory
     UIManager->ApplyCommand("/control/macroPath macros ");
 
-    // create vis manager
-    G4VisManager* visManager{new G4VisExecutive};
-    visManager->Initialize();
-
     // the user provided a macro
     if (args["macro"].as<std::string>() != "") {
         UIManager->ApplyCommand("/control/execute "+ args["macro"].as<std::string>());
     }
+    else { // we run interactively
 
-    // we open an interactive session
-    G4UIExecutive* ui{new G4UIExecutive(argc, argv)};
-    ui->SessionStart();
+        // we open an interactive session
+        G4UIExecutive* ui{new G4UIExecutive(argc, argv)};
+        ui->SessionStart();
+        delete ui;
+
+    }
 
     // cleanup the run manager
+    std::cerr << "Deleting the run manager\n";
+    // delete visManager;
     delete runManager;
 
-    // and we are done
-    return 0;
+    // // and we are done
+    // return 0;
 
 }

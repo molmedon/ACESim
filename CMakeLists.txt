@@ -52,6 +52,7 @@ target_link_libraries(ACESim ${Boost_LIBRARIES})
 set(SCRIPTS
   macros/estb.mac
   macros/vis.mac
+  macros/run.mac
   )
 
 foreach(_script ${SCRIPTS})

@@ -1,0 +1,9 @@
+
+# initialize the kernel
+/run/initialize
+
+# load the beam settings
+/control/execute estb.mac
+
+# and execute 1 event!
+/run/beamOn 1

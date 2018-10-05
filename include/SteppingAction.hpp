@@ -15,5 +15,11 @@ public:
     ///
     auto UserSteppingAction(const G4Step*) -> void override;
 
+private:
+
+    // ///
+    // /// \brief Check for hits in the ACE system and process.
+    // ///
+    // auto CheckForACEHits(const G4Step* step) -> void;
 
 };
